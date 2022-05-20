@@ -1,7 +1,7 @@
 # stl-to-text
 An extremely ineffcient way to render a 3D model in the convenience of the command line.  
 Simply pass one or more binary stl files as arguments (best used with only one).  
-Automaticly centers, applies a perspective effect, and scale to fit your current terminal size  
+Automatically centers, applies a perspective effect, and scale to fit your current terminal size  
 Now with command line arguments!
 # How to Use
 Enter each file you want to display followed by arguments to apply transformations to each model individually  
