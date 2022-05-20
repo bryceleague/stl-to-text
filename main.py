@@ -2,6 +2,7 @@ import math
 import struct
 import sys
 import os
+from typing import List
 
 
 class Object3d:
@@ -86,10 +87,8 @@ class Object3d:
         x_fac = x_size / x
         y_fac = y_size / y
 
-        if x_fac < y_fac:
-            self.scale(x_fac, x_fac, x_fac)
-        else:
-            self.scale(y_fac, y_fac, y_fac)
+        fac = x_fac if x_fac < y_fac else y_fac
+        self.scale(fac, fac, fac)
     
     def orign(self):
         self.translate(-self.x_min(), -self.y_min(), -self.z_min())
@@ -117,7 +116,7 @@ class Scene:
         max_scr_y = math.ceil(max([obj.y_max() for obj in objects]))
         min_scr_y = math.floor(min([obj.y_min() for obj in objects]))
         return Scene(objects, lighting, max_scr_x, min_scr_x, max_scr_y, min_scr_y)
-    
+
     def clear_screen(self):
         self.screenBuffer = [[(None, ' ') for _ in range(self.max_scr_x - self.min_scr_x)] for _ in range(self.max_scr_y - self.min_scr_y)]
 
@@ -196,6 +195,18 @@ def read_stl(filename):
             file.read(2)  # Skip 2 byte attribute for each triangle
     return tri_verts, tri_norms
 
+def scale_to_fit(objects: List[Object3d], x_size: int, y_size: int):
+    max_scr_x = math.ceil(max([obj.x_max() for obj in objects]))
+    min_scr_x = math.floor(min([obj.x_min() for obj in objects]))
+    max_scr_y = math.ceil(max([obj.y_max() for obj in objects]))
+    min_scr_y = math.floor(min([obj.y_min() for obj in objects]))
+
+    x_fac = x_size / (max_scr_x - min_scr_x)
+    y_fac = y_size / (max_scr_y - min_scr_y)
+    
+    fac = x_fac if x_fac < y_fac else y_fac
+    [obj.scale(fac, fac, fac) for obj in objects]
+
 def cart_to_bary(tri, pt):
     (x1, y1, _), (x2, y2, _), (x3, y3, _) = tri
     x, y = pt
@@ -229,19 +240,59 @@ if __name__ == "__main__":
     (x_term, y_term) = os.get_terminal_size()
 
     objects = []
+    last_object = None
     for arg in sys.argv[1:]:
         if arg[0] == '-':
-            pass # Optional command line args
-        else:
-            obj = Object3d.from_stl(arg)
-            obj.center()
-            obj.rot_x(-1)
-            obj.scale(1, 1 * char_ratio, 1)
-            obj.perspective(3*obj.z_max())
-            obj.orign()
-            obj.scale_to_fit(x_term, y_term-1)
-            objects.append(obj)
+            try:
+                if arg[:3] == "-x=":
+                    last_object.translate(xt=float(arg[3:]))
+                elif arg[:3] == "-y=":
+                    last_object.translate(yt=float(arg[3:]))
+                elif arg[:3] == "-z=":
+                    last_object.translate(zt=float(arg[3:]))
+                
+                elif arg[:4] == "-rx=":
+                    last_object.rot_x(float(arg[4:]))
+                elif arg[:4] == "-ry=":
+                    last_object.rot_y(float(arg[4:]))
+                elif arg[:4] == "-rz=":
+                    last_object.rot_z(float(arg[4:]))
+                
+                elif arg[:3] == "-s=":
+                    fac = float(arg[3:])
+                    last_object.scale(fac, fac, fac)
+                elif arg[:4] == "-sx=":
+                    last_object.scale(sx=float(arg[4:]))
+                elif arg[:4] == "-sy=":
+                    last_object.scale(sy=float(arg[4:]))
+                elif arg[:4] == "-sz=":
+                    last_object.scale(sz=float(arg[4:]))
+                
+                else:
+                    print("flag not recognized", file=sys.stderr)
+                    quit(1)
 
+            except ValueError as err:
+                print("a valid float must by passed to flags:", err, file=sys.stderr)
+                quit(1)
+        else:
+            try:
+                obj = Object3d.from_stl(arg)
+            except IOError as err:
+                print("problem reading file:", err, file=sys.stderr)
+                quit(1)
+
+            obj.center()
+            obj.scale_to_fit(x_term, y_term)
+            objects.append(obj)
+            last_object = obj
+    
+    closest = max([obj.z_max() for obj in objects])
+    for obj in objects:
+        obj.scale(1, 1 * char_ratio, 1)
+        obj.perspective(3*closest)
+
+    scale_to_fit(objects, x_term-1, y_term)
     scene = Scene.create_trucated(objects, light)
     scene.render()
     scene.print()
