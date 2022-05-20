@@ -1,7 +1,7 @@
 import math
-from re import X
 import struct
 import sys
+import os
 
 
 class Object3d:
@@ -223,7 +223,8 @@ def is_in_tri(tri, pt):
 
 light = [2 ** (1 / 2) / 2, 0, -2 ** (1 / 2) / 2]
 char_ratio = 58 / 113
-
+(x_term, y_term) = os.get_terminal_size()
+print(y_term)
 
 objects = []
 for arg in sys.argv[1:]:
@@ -234,8 +235,8 @@ for arg in sys.argv[1:]:
         obj.center()
         obj.rot_x(-1)
         obj.scale(1, 1 * char_ratio, 1)
-        obj.scale_to_fit(100, 100)
         obj.perspective(3*obj.z_max())
+        obj.scale_to_fit(x_term, y_term-1)
         objects.append(obj)
 
 scene = Scene.create_trucated(objects, light)
