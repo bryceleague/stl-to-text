@@ -90,6 +90,9 @@ class Object3d:
             self.scale(x_fac, x_fac, x_fac)
         else:
             self.scale(y_fac, y_fac, y_fac)
+    
+    def orign(self):
+        self.translate(-self.x_min(), -self.y_min(), -self.z_min())
 
     def center(self):
         mid_x = (self.x_min() + self.y_max()) / 2
@@ -220,25 +223,25 @@ def is_in_tri(tri, pt):
     pt1, pt2, pt3 = tri
     return line_func(pt1, pt2, pt) and line_func(pt2, pt3, pt) and line_func(pt3, pt1, pt)
 
+if __name__ == "__main__":
+    light = [2 ** (1 / 2) / 2, 0, -2 ** (1 / 2) / 2]
+    char_ratio = 58 / 113
+    (x_term, y_term) = os.get_terminal_size()
 
-light = [2 ** (1 / 2) / 2, 0, -2 ** (1 / 2) / 2]
-char_ratio = 58 / 113
-(x_term, y_term) = os.get_terminal_size()
-print(y_term)
+    objects = []
+    for arg in sys.argv[1:]:
+        if arg[0] == '-':
+            pass # Optional command line args
+        else:
+            obj = Object3d.from_stl(arg)
+            obj.center()
+            obj.rot_x(-1)
+            obj.scale(1, 1 * char_ratio, 1)
+            obj.perspective(3*obj.z_max())
+            obj.orign()
+            obj.scale_to_fit(x_term, y_term-1)
+            objects.append(obj)
 
-objects = []
-for arg in sys.argv[1:]:
-    if arg[0] == '-':
-        pass # Optional command line args
-    else:
-        obj = Object3d.from_stl(arg)
-        obj.center()
-        obj.rot_x(-1)
-        obj.scale(1, 1 * char_ratio, 1)
-        obj.perspective(3*obj.z_max())
-        obj.scale_to_fit(x_term, y_term-1)
-        objects.append(obj)
-
-scene = Scene.create_trucated(objects, light)
-scene.render()
-scene.print()
+    scene = Scene.create_trucated(objects, light)
+    scene.render()
+    scene.print()
