@@ -1,2 +1,3 @@
 # stl-to-text
-Renders any binary stl file into unicode shading characters
+An extremely ineffcient way to render a 3D model in the convenience of the command line.
+Simply pass one or more binary stl files as arguments.
