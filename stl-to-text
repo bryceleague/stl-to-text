@@ -246,6 +246,11 @@ if __name__ == "__main__":
 
     light = [2 ** (1 / 2) / 2, 0, -2 ** (1 / 2) / 2]
     char_ratio = 58 / 113
+
+    usage_try = """\
+Usage: stl-to-text [OPTIONS]... [FILE [OPTIONS]...]...
+Try 'stl-to-text --help' for more information."""
+
     help = """\
 Usage: stl-to-text [OPTIONS]... [FILE [OPTIONS]...]...
 Display mesh encoded by binary stl FILE transformed by OPTIONS
@@ -263,7 +268,7 @@ Transforms:
 
     objects = []
     last_object = None
-    if len(sys.argv) == 1 or sys.argv[1] == "--help":
+    if len(sys.argv) == 1 or "--help" in sys.argv:
         print(help)
         quit(0)
     for arg in sys.argv[1:]:
@@ -305,19 +310,19 @@ Transforms:
                     last_object.scale(sz=float(arg[4:]))
                 
                 else:
-                    print("stl-to-text: flag not recognized.", file=sys.stderr)
+                    print("stl-to-text: option not recognized:", arg, file=sys.stderr)
+                    print(usage_try)
                     quit(1)
 
             except ValueError as err:
-                print("stl-to-text: a valid float must by passed to flags:", err, file=sys.stderr)
+                print("stl-to-text: a valid number must by passed to options:", err, file=sys.stderr)
                 quit(1)
             
             except AttributeError:
-                print("stl-to-text: an object must be specified for flags to act on.", file=sys.stderr)
+                print("stl-to-text: an object must be specified for options to act on.", file=sys.stderr)
+                print(usage_try)
                 quit(1)
             
-
-
     
     closest = max([obj.z_max() for obj in objects])
     for obj in objects:
