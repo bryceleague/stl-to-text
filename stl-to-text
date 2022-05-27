@@ -240,7 +240,7 @@ if __name__ == "__main__":
     try:
         (x_term, y_term) = os.get_terminal_size()
     except OSError:
-        print("Failed to get terminal size. Defaulting to 100x100", file=sys.stderr)
+        print("Failed to get terminal size. Defaulting to 100x100.", file=sys.stderr)
         x_term = 100
         y_term = 100
 
@@ -263,12 +263,9 @@ Transforms:
 
     objects = []
     last_object = None
-    if len(sys.argv) == 1:
+    if len(sys.argv) == 1 or sys.argv[1] == "--help":
         print(help)
         quit(0)
-    if sys.argv[1][0] == '-':
-        print("stl-to-text: a file must be entered before any options", file=sys.stderr)
-        quit(1)
     for arg in sys.argv[1:]:
         if arg[0] != '-':
             try:
@@ -282,9 +279,6 @@ Transforms:
             objects.append(obj)
             last_object = obj             
         else:
-            if arg == "--help":
-                    print(help)
-                    quit(0)
             try:
                 if arg[:3] == "-x=":
                     last_object.translate(xt=float(arg[3:]))
@@ -311,12 +305,18 @@ Transforms:
                     last_object.scale(sz=float(arg[4:]))
                 
                 else:
-                    print("stl-to-text: flag not recognized", file=sys.stderr)
+                    print("stl-to-text: flag not recognized.", file=sys.stderr)
                     quit(1)
 
             except ValueError as err:
                 print("stl-to-text: a valid float must by passed to flags:", err, file=sys.stderr)
                 quit(1)
+            
+            except AttributeError:
+                print("stl-to-text: an object must be specified for flags to act on.", file=sys.stderr)
+                quit(1)
+            
+
 
     
     closest = max([obj.z_max() for obj in objects])
